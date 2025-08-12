@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visiting Card Contact Extractor - Secure</title>
+    <title>Secure Visiting Card Extractor</title>
     <style>
         * {
             margin: 0;
@@ -126,18 +126,6 @@
             cursor: not-allowed;
         }
 
-        .btn-secondary {
-            background: transparent;
-            border: 2px solid #667eea;
-            color: #667eea;
-            margin-top: 10px;
-        }
-
-        .btn-secondary:hover {
-            background: #667eea;
-            color: white;
-        }
-
         /* Main App Styles */
         .main-content {
             padding: 40px;
@@ -184,35 +172,6 @@
             display: none;
         }
 
-        .stats-section {
-            background: #f8f9ff;
-            padding: 20px;
-            border-radius: 15px;
-            margin-bottom: 30px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-
-        .stat-card {
-            text-align: center;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .stat-number {
-            font-size: 2em;
-            font-weight: bold;
-            color: #667eea;
-        }
-
-        .stat-label {
-            color: #666;
-            margin-top: 5px;
-        }
-
         .results-section {
             display: none;
             margin-top: 30px;
@@ -224,20 +183,6 @@
             padding: 30px;
             margin-bottom: 20px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            position: relative;
-        }
-
-        .contact-card .delete-btn {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: #ff4757;
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 15px;
-            cursor: pointer;
-            font-size: 0.9em;
         }
 
         .contact-field {
@@ -283,6 +228,13 @@
             border-color: #667eea;
         }
 
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
         .error {
             background: #fff5f5;
             color: #e53e3e;
@@ -301,11 +253,14 @@
             margin: 20px 0;
         }
 
-        .loading {
-            text-align: center;
-            padding: 40px;
-            font-size: 1.2em;
-            color: #667eea;
+        .token-info {
+            background: #fff7ed;
+            color: #dd6b20;
+            border: 1px solid #fbd38d;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
         }
 
         .auth-switch {
@@ -324,16 +279,6 @@
             text-decoration: underline;
         }
 
-        .token-info {
-            background: #fff7ed;
-            color: #dd6b20;
-            border: 1px solid #fbd38d;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 15px 0;
-            font-size: 0.9em;
-        }
-
         @media (max-width: 768px) {
             .main-content {
                 padding: 20px;
@@ -350,10 +295,6 @@
             
             .field-label {
                 margin-bottom: 5px;
-            }
-
-            .stats-section {
-                grid-template-columns: 1fr;
             }
 
             .user-info {
@@ -380,16 +321,16 @@
         <div class="auth-container" id="authContainer">
             <!-- Login Form -->
             <div class="auth-form" id="loginForm">
-                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Demo Mode</h2>
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Sign In</h2>
                 
                 <div class="form-group">
                     <label for="loginEmail">Email Address</label>
-                    <input type="email" id="loginEmail" placeholder="demo@example.com" value="demo@example.com">
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
                 </div>
                 
                 <div class="form-group">
                     <label for="loginPassword">Password</label>
-                    <input type="password" id="loginPassword" placeholder="demo123" value="demo123">
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
                 </div>
                 
                 <button class="btn" onclick="login()" id="loginBtn">Sign In</button>
@@ -433,22 +374,6 @@
 
         <!-- Main Application -->
         <div class="main-content" id="mainContent">
-            <!-- User Statistics -->
-            <div class="stats-section" id="statsSection">
-                <div class="stat-card">
-                    <div class="stat-number" id="totalContacts">0</div>
-                    <div class="stat-label">Total Contacts</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="totalCategories">0</div>
-                    <div class="stat-label">Business Categories</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" id="recentUploads">0</div>
-                    <div class="stat-label">This Month</div>
-                </div>
-            </div>
-
             <!-- Upload Section -->
             <div class="upload-section">
                 <div class="upload-box" onclick="document.getElementById('fileInput').click()">
@@ -484,26 +409,41 @@
         let currentUser = null;
         let authToken = null;
         let isProcessing = false;
-        let storedContacts = [];
 
         // Initialize app
         window.onload = function() {
+            console.log('🚀 Secure Visiting Card Extractor initialized');
             checkAuthState();
         };
 
         // Authentication State Management
         function checkAuthState() {
             authToken = localStorage.getItem('authToken');
-            if (authToken) {
-                currentUser = { email: localStorage.getItem('userEmail') || 'demo@example.com' };
+            const userEmail = localStorage.getItem('userEmail');
+            
+            if (authToken && userEmail) {
+                currentUser = { email: userEmail };
                 showMainApp();
-                loadUserStats();
+                testBackendConnection();
             } else {
                 showAuthContainer();
             }
         }
 
-        // Authentication Functions (Demo Mode)
+        // Test backend connection
+        function testBackendConnection() {
+            fetch('/api/health')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ Backend connection successful:', data);
+                })
+                .catch(error => {
+                    console.error('❌ Backend connection failed:', error);
+                    showError('Backend connection failed. Please check if the server is running.');
+                });
+        }
+
+        // Authentication Functions
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
@@ -517,22 +457,41 @@
             loginBtn.disabled = true;
             loginBtn.textContent = 'Signing in...';
 
-            setTimeout(() => {
-                authToken = 'demo_token_' + Date.now();
-                localStorage.setItem('authToken', authToken);
-                localStorage.setItem('userEmail', email);
-                currentUser = { email };
-                showMainApp();
-                loadUserStats();
-                showSuccess('Logged in successfully!');
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    authToken = result.token || 'authenticated';
+                    localStorage.setItem('authToken', authToken);
+                    localStorage.setItem('userEmail', email);
+                    currentUser = { email };
+                    showMainApp();
+                    showSuccess('Logged in successfully!');
+                } else {
+                    showError(result.error || 'Login failed');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                showError('Login failed: ' + error.message);
+            } finally {
                 loginBtn.disabled = false;
                 loginBtn.textContent = 'Sign In';
-            }, 1000);
+            }
         }
 
         async function register() {
             const email = document.getElementById('registerEmail').value;
             const password = document.getElementById('registerPassword').value;
+            const fullName = document.getElementById('registerFullName').value;
+            const company = document.getElementById('registerCompany').value;
             const registerBtn = document.getElementById('registerBtn');
 
             if (!email || !password) {
@@ -543,16 +502,45 @@
             registerBtn.disabled = true;
             registerBtn.textContent = 'Creating account...';
 
-            setTimeout(() => {
-                showSuccess('Account created successfully! You can now sign in.');
-                showLoginForm();
-                document.getElementById('loginEmail').value = email;
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password, full_name: fullName, company })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showSuccess('Account created successfully! Please sign in.');
+                    showLoginForm();
+                    document.getElementById('loginEmail').value = email;
+                } else {
+                    showError(result.error || 'Registration failed');
+                }
+            } catch (error) {
+                console.error('Registration error:', error);
+                showError('Registration failed: ' + error.message);
+            } finally {
                 registerBtn.disabled = false;
                 registerBtn.textContent = 'Create Account';
-            }, 1000);
+            }
         }
 
-        function logout() {
+        async function logout() {
+            try {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken
+                    }
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+
             localStorage.removeItem('authToken');
             localStorage.removeItem('userEmail');
             authToken = null;
@@ -583,16 +571,6 @@
         function showRegisterForm() {
             document.getElementById('loginForm').style.display = 'none';
             document.getElementById('registerForm').style.display = 'block';
-        }
-
-        // User Statistics
-        function loadUserStats() {
-            const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
-            const categories = new Set(contacts.map(c => c.business_category).filter(Boolean));
-            
-            document.getElementById('totalContacts').textContent = contacts.length;
-            document.getElementById('totalCategories').textContent = categories.size;
-            document.getElementById('recentUploads').textContent = Math.min(contacts.length, 3);
         }
 
         // File Upload Handling
@@ -631,70 +609,106 @@
             isProcessing = true;
             showLoading();
 
-            // Simulate processing
-            setTimeout(() => {
-                const mockResult = {
-                    success: true,
-                    contact_info: {
-                        name: "John Smith",
-                        company: "Tech Solutions Inc",
-                        phone: "+1-234-567-8900",
-                        email: "john@techsolutions.com",
-                        website: "www.techsolutions.com",
-                        address: "123 Business St, City, State 12345"
-                    },
-                    business_intelligence: {
-                        category: "Technology Services",
-                        subcategory: "Software Development",
-                        services: "Web Development, Mobile Apps, Cloud Solutions",
-                        target_market: "Small to Medium Businesses",
-                        keywords: ["Software", "Development", "Cloud", "Technology"]
-                    },
-                    tokens_used: 1250,
-                    contact_id: Date.now()
-                };
+            const formData = new FormData();
+            formData.append('image', file);
 
-                // Save to localStorage
-                const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
-                contacts.push(mockResult.contact_info);
-                localStorage.setItem('contacts', JSON.stringify(contacts));
+            try {
+                console.log('🔄 Processing image:', file.name);
+                
+                const response = await fetch('/api/process-visiting-card', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: formData
+                });
 
-                displayResults(mockResult);
-                loadUserStats();
+                console.log('📡 Response status:', response.status);
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showError('Authentication required. Please log in again.');
+                        logout();
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Processing result:', result);
+                displayResults(result);
+
+            } catch (error) {
+                console.error('💥 Error processing image:', error);
+                showError('Error processing image: ' + error.message);
+            } finally {
                 isProcessing = false;
-            }, 2000);
+            }
         }
 
         // Search Functions
-        function searchContacts() {
-            const query = document.getElementById('queryInput').value.toLowerCase();
+        async function searchContacts() {
+            const query = document.getElementById('queryInput').value;
             if (!query.trim()) return;
 
-            const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
-            const results = contacts.filter(contact => 
-                Object.values(contact).some(value => 
-                    value && value.toString().toLowerCase().includes(query)
-                )
-            );
+            console.log('🔍 Searching for:', query);
 
-            displayQueryResults({ success: true, results });
+            try {
+                const response = await fetch('/api/search-contacts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ query: query, limit: 5 })
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showError('Authentication required. Please log in again.');
+                        logout();
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('🔎 Search result:', result);
+                displayQueryResults(result);
+
+            } catch (error) {
+                console.error('💥 Error searching contacts:', error);
+                showQueryError('Error searching contacts: ' + error.message);
+            }
         }
 
-        function loadAllContacts() {
-            const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
-            displayQueryResults({ success: true, results: contacts }, 'All Your Contacts');
-        }
-
-        function deleteContact(index) {
-            if (!confirm('Are you sure you want to delete this contact?')) return;
-
-            const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
-            contacts.splice(index, 1);
-            localStorage.setItem('contacts', JSON.stringify(contacts));
+        async function loadAllContacts() {
+            console.log('📇 Loading all contacts');
             
-            showSuccess('Contact deleted successfully');
-            loadAllContacts();
-            loadUserStats();
+            try {
+                const response = await fetch('/api/contacts', {
+                    headers: {
+                        'Authorization': 'Bearer ' + authToken
+                    }
+                });
+
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        showError('Authentication required. Please log in again.');
+                        logout();
+                        return;
+                    }
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('📋 All contacts result:', result);
+                displayQueryResults(result, 'All Your Contacts');
+
+            } catch (error) {
+                console.error('💥 Error loading contacts:', error);
+                showQueryError('Error loading contacts: ' + error.message);
+            }
         }
 
         // Display Functions
@@ -717,16 +731,28 @@
 
             const contact = result.contact_info;
             const business = result.business_intelligence || {};
+            const tokenInfo = result.token_validation;
 
             resultsDiv.innerHTML = `
-                <div class="success">✅ Contact information extracted and securely stored!</div>
+                <div class="success">✅ Contact information extracted successfully!</div>
+                
+                ${tokenInfo ? `
+                <div class="token-info">
+                    📊 Tokens used: ${result.tokens_used || 0} / ${tokenInfo.total_tokens} 
+                    (${tokenInfo.remaining_tokens} remaining)
+                </div>
+                ` : ''}
                 
                 <div class="contact-card">
                     <h3>📋 Contact Information</h3>
-                    ${Object.entries(contact).map(([key, value]) => `
+                    ${Object.entries(contact).filter(([key, value]) => 
+                        value && value !== 'null' && !['business_category', 'business_subcategory', 'industry_keywords', 'services_offered', 'target_market', 'business_type', 'company_size', 'geographic_scope', 'specializations'].includes(key)
+                    ).map(([key, value]) => `
                         <div class="contact-field">
                             <div class="field-label">${capitalizeFirst(key)}:</div>
-                            <div class="field-value">${value}</div>
+                            <div class="field-value">${
+                                Array.isArray(value) ? value.join(', ') : value
+                            }</div>
                         </div>
                     `).join('')}
                 </div>
@@ -735,7 +761,7 @@
                 <div class="contact-card" style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);">
                     <h3>🧠 Business Intelligence</h3>
                     <div class="contact-field">
-                        <div class="field-label">Category:</div>
+                        <div class="field-label">Business Category:</div>
                         <div class="field-value"><strong>${business.category}</strong></div>
                     </div>
                     ${business.subcategory ? `
@@ -750,9 +776,15 @@
                         <div class="field-value">${business.services}</div>
                     </div>
                     ` : ''}
-                    ${business.keywords ? `
+                    ${business.target_market ? `
                     <div class="contact-field">
-                        <div class="field-label">Keywords:</div>
+                        <div class="field-label">Target Market:</div>
+                        <div class="field-value">${business.target_market}</div>
+                    </div>
+                    ` : ''}
+                    ${business.keywords && business.keywords.length > 0 ? `
+                    <div class="contact-field">
+                        <div class="field-label">Industry Keywords:</div>
                         <div class="field-value">
                             ${business.keywords.map(keyword => 
                                 `<span style="background: #667eea; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.9em; margin: 2px;">${keyword}</span>`
@@ -762,6 +794,13 @@
                     ` : ''}
                 </div>
                 ` : ''}
+                
+                <div class="contact-card" style="background: #f0fff4;">
+                    <div style="text-align: center; color: #38a169;">
+                        🎯 <strong>This contact is securely stored and searchable!</strong><br>
+                        <small>Try searching: "${business.category || 'business'} services", "companies in ${business.category || 'this industry'}", etc.</small>
+                    </div>
+                </div>
             `;
         }
 
@@ -773,7 +812,7 @@
                 return;
             }
 
-            const items = result.results || [];
+            const items = result.results || result.contacts || [];
             
             if (items.length === 0) {
                 queryResults.innerHTML = `<div class="error">🔍 No contacts found</div>`;
@@ -782,16 +821,59 @@
 
             queryResults.innerHTML = `
                 <h4>${title} (${items.length} found)</h4>
-                ${items.map((contact, index) => `
+                ${items.map(item => {
+                    // Use contact_data if available, otherwise fall back to metadata
+                    const contact = item.contact_data || {};
+                    const metadata = item.metadata || {};
+                    
+                    return `
                     <div class="contact-card">
-                        <button class="delete-btn" onclick="deleteContact(${index})">🗑️ Delete</button>
-                        <h4>${contact.name || 'Unknown Name'}</h4>
-                        ${contact.company ? `<p><strong>Company:</strong> ${contact.company}</p>` : ''}
-                        ${contact.phone ? `<p><strong>Phone:</strong> ${contact.phone}</p>` : ''}
-                        ${contact.email ? `<p><strong>Email:</strong> ${contact.email}</p>` : ''}
-                        ${contact.website ? `<p><strong>Website:</strong> ${contact.website}</p>` : ''}
+                        <div class="contact-field">
+                            <div class="field-label">Name:</div>
+                            <div class="field-value">${contact.name || metadata.name || 'N/A'}</div>
+                        </div>
+                        <div class="contact-field">
+                            <div class="field-label">Company:</div>
+                            <div class="field-value">${contact.company || metadata.company || 'N/A'}</div>
+                        </div>
+                        <div class="contact-field">
+                            <div class="field-label">Position:</div>
+                            <div class="field-value">${contact.position || metadata.position || 'N/A'}</div>
+                        </div>
+                        <div class="contact-field">
+                            <div class="field-label">Email:</div>
+                            <div class="field-value">${contact.email || metadata.email || 'N/A'}</div>
+                        </div>
+                        <div class="contact-field">
+                            <div class="field-label">Phone:</div>
+                            <div class="field-value">${
+                                Array.isArray(contact.phone) ? contact.phone.join(', ') : 
+                                (contact.phone || 'N/A')
+                            }</div>
+                        </div>
+                        <div class="contact-field">
+                            <div class="field-label">Address:</div>
+                            <div class="field-value">${contact.address || 'N/A'}</div>
+                        </div>
+                        <div class="contact-field">
+                            <div class="field-label">Website:</div>
+                            <div class="field-value">${contact.website || 'N/A'}</div>
+                        </div>
+                        ${item.created_at ? `
+                        <div class="contact-field">
+                            <div class="field-label">Added:</div>
+                            <div class="field-value">${new Date(item.created_at).toLocaleDateString()}</div>
+                        </div>
+                        ` : ''}
+                        ${item.similarity !== undefined ? `
+                        <div class="contact-field">
+                            <div class="field-label">Relevance:</div>
+                            <div class="field-value">${(item.similarity * 100).toFixed(0)}%</div>
+                        </div>
+                        ` : ''}
                     </div>
-                `).join('')}
+                    `;
+                }).join('')}
             `;
         }
 
@@ -801,17 +883,21 @@
         }
 
         function showError(message) {
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error';
-            errorDiv.innerHTML = `❌ ${message}`;
-            document.body.appendChild(errorDiv);
-            setTimeout(() => errorDiv.remove(), 5000);
+            const errorDiv = document.getElementById('results');
+            errorDiv.innerHTML = `<div class="error">❌ ${message}</div>`;
+            errorDiv.style.display = 'block';
         }
 
         function showSuccess(message) {
+            // Create temporary success message
             const successDiv = document.createElement('div');
             successDiv.className = 'success';
             successDiv.innerHTML = `✅ ${message}`;
+            successDiv.style.position = 'fixed';
+            successDiv.style.top = '20px';
+            successDiv.style.right = '20px';
+            successDiv.style.zIndex = '1000';
+            successDiv.style.maxWidth = '300px';
             document.body.appendChild(successDiv);
             setTimeout(() => successDiv.remove(), 3000);
         }
@@ -819,6 +905,13 @@
         function showQueryError(message) {
             document.getElementById('queryResults').innerHTML = `<div class="error">❌ ${message}</div>`;
         }
+
+        // Enter key support for search
+        document.getElementById('queryInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchContacts();
+            }
+        });
     </script>
 </body>
 </html>
