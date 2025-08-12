@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visiting Card Contact Extractor - Secure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: none;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+        }
+
+        .user-info button {
+            background: none;
+            border: 1px solid white;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        /* Authentication Forms */
+        .auth-container {
+            padding: 40px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .auth-form {
+            background: #f8f9ff;
+            padding: 40px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        /* Main App Styles */
+        .main-content {
+            padding: 40px;
+            display: none;
+        }
+
+        .upload-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .upload-box {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 50px 30px;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .upload-box:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-box.dragover {
+            border-color: #28a745;
+            background: #f0fff0;
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .stats-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .results-section {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .contact-card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .contact-card .delete-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .contact-field {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .field-label {
+            font-weight: bold;
+            color: #667eea;
+            width: 120px;
+            min-width: 120px;
+        }
+
+        .field-value {
+            color: #333;
+            flex: 1;
+        }
+
+        .query-section {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid #eee;
+        }
+
+        .query-box {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .query-input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 1.1em;
+            outline: none;
+        }
+
+        .query-input:focus {
+            border-color: #667eea;
+        }
+
+        .error {
+            background: #fff5f5;
+            color: #e53e3e;
+            border: 1px solid #fed7d7;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .success {
+            background: #f0fff4;
+            color: #38a169;
+            border: 1px solid #c6f6d5;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .auth-switch a {
+            color: #667eea;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .token-info {
+            background: #fff7ed;
+            color: #dd6b20;
+            border: 1px solid #fbd38d;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+            
+            .query-box {
+                flex-direction: column;
+            }
+            
+            .contact-field {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .field-label {
+                margin-bottom: 5px;
+            }
+
+            .stats-section {
+                grid-template-columns: 1fr;
+            }
+
+            .user-info {
+                position: static;
+                margin-top: 20px;
+                background: rgba(255,255,255,0.3);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Secure Visiting Card Extractor</h1>
+            <p>AI-powered contact extraction with user authentication</p>
+            
+            <div class="user-info" id="userInfo">
+                <span id="userEmail"></span>
+                <button onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="auth-container" id="authContainer">
+            <!-- Login Form -->
+            <div class="auth-form" id="loginForm">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Demo Mode</h2>
+                
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" placeholder="demo@example.com" value="demo@example.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="demo123" value="demo123">
+                </div>
+                
+                <button class="btn" onclick="login()" id="loginBtn">Sign In</button>
+                
+                <div class="auth-switch">
+                    Don't have an account? <a onclick="showRegisterForm()">Sign up here</a>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div class="auth-form" id="registerForm" style="display: none;">
+                <h2 style="text-align: center; margin-bottom: 30px; color: #333;">Create Account</h2>
+                
+                <div class="form-group">
+                    <label for="registerEmail">Email Address</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerPassword">Password</label>
+                    <input type="password" id="registerPassword" placeholder="Create a password" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerFullName">Full Name</label>
+                    <input type="text" id="registerFullName" placeholder="Your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="registerCompany">Company (Optional)</label>
+                    <input type="text" id="registerCompany" placeholder="Your company name">
+                </div>
+                
+                <button class="btn" onclick="register()" id="registerBtn">Create Account</button>
+                
+                <div class="auth-switch">
+                    Already have an account? <a onclick="showLoginForm()">Sign in here</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Application -->
+        <div class="main-content" id="mainContent">
+            <!-- User Statistics -->
+            <div class="stats-section" id="statsSection">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalContacts">0</div>
+                    <div class="stat-label">Total Contacts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCategories">0</div>
+                    <div class="stat-label">Business Categories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="recentUploads">0</div>
+                    <div class="stat-label">This Month</div>
+                </div>
+            </div>
+
+            <!-- Upload Section -->
+            <div class="upload-section">
+                <div class="upload-box" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">Click to upload or drag and drop your visiting card image</div>
+                    <div class="upload-text" style="font-size: 0.9em; color: #999;">
+                        Supports: JPG, JPEG, PNG, WEBP (Max: 16MB)
+                    </div>
+                    <button class="btn" type="button">Choose File</button>
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept=".jpg,.jpeg,.png,.webp">
+            </div>
+
+            <div class="results-section" id="results">
+                <!-- Results will be populated here -->
+            </div>
+
+            <!-- Search Section -->
+            <div class="query-section">
+                <h3>🔍 Search Your Contacts</h3>
+                <div class="query-box">
+                    <input type="text" class="query-input" id="queryInput" 
+                           placeholder="Search by company, name, category, services...">
+                    <button class="btn" onclick="searchContacts()">Search</button>
+                    <button class="btn" onclick="loadAllContacts()">View All</button>
+                </div>
+                <div id="queryResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let authToken = null;
+        let isProcessing = false;
+        let storedContacts = [];
+
+        // Initialize app
+        window.onload = function() {
+            checkAuthState();
+        };
+
+        // Authentication State Management
+        function checkAuthState() {
+            authToken = localStorage.getItem('authToken');
+            if (authToken) {
+                currentUser = { email: localStorage.getItem('userEmail') || 'demo@example.com' };
+                showMainApp();
+                loadUserStats();
+            } else {
+                showAuthContainer();
+            }
+        }
+
+        // Authentication Functions (Demo Mode)
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const loginBtn = document.getElementById('loginBtn');
+
+            if (!email || !password) {
+                showError('Please enter both email and password');
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing in...';
+
+            setTimeout(() => {
+                authToken = 'demo_token_' + Date.now();
+                localStorage.setItem('authToken', authToken);
+                localStorage.setItem('userEmail', email);
+                currentUser = { email };
+                showMainApp();
+                loadUserStats();
+                showSuccess('Logged in successfully!');
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Sign In';
+            }, 1000);
+        }
+
+        async function register() {
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            const registerBtn = document.getElementById('registerBtn');
+
+            if (!email || !password) {
+                showError('Please enter both email and password');
+                return;
+            }
+
+            registerBtn.disabled = true;
+            registerBtn.textContent = 'Creating account...';
+
+            setTimeout(() => {
+                showSuccess('Account created successfully! You can now sign in.');
+                showLoginForm();
+                document.getElementById('loginEmail').value = email;
+                registerBtn.disabled = false;
+                registerBtn.textContent = 'Create Account';
+            }, 1000);
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('userEmail');
+            authToken = null;
+            currentUser = null;
+            showAuthContainer();
+            showSuccess('Logged out successfully');
+        }
+
+        // UI State Management
+        function showAuthContainer() {
+            document.getElementById('authContainer').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('userInfo').style.display = 'none';
+        }
+
+        function showMainApp() {
+            document.getElementById('authContainer').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        function showRegisterForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        // User Statistics
+        function loadUserStats() {
+            const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
+            const categories = new Set(contacts.map(c => c.business_category).filter(Boolean));
+            
+            document.getElementById('totalContacts').textContent = contacts.length;
+            document.getElementById('totalCategories').textContent = categories.size;
+            document.getElementById('recentUploads').textContent = Math.min(contacts.length, 3);
+        }
+
+        // File Upload Handling
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                processImage(e.target.files[0]);
+            }
+        });
+
+        // Drag and drop handling
+        const uploadBox = document.querySelector('.upload-box');
+        
+        uploadBox.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadBox.classList.add('dragover');
+        });
+
+        uploadBox.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+        });
+
+        uploadBox.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadBox.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                processImage(files[0]);
+            }
+        });
+
+        async function processImage(file) {
+            if (isProcessing) return;
+            
+            isProcessing = true;
+            showLoading();
+
+            // Simulate processing
+            setTimeout(() => {
+                const mockResult = {
+                    success: true,
+                    contact_info: {
+                        name: "John Smith",
+                        company: "Tech Solutions Inc",
+                        phone: "+1-234-567-8900",
+                        email: "john@techsolutions.com",
+                        website: "www.techsolutions.com",
+                        address: "123 Business St, City, State 12345"
+                    },
+                    business_intelligence: {
+                        category: "Technology Services",
+                        subcategory: "Software Development",
+                        services: "Web Development, Mobile Apps, Cloud Solutions",
+                        target_market: "Small to Medium Businesses",
+                        keywords: ["Software", "Development", "Cloud", "Technology"]
+                    },
+                    tokens_used: 1250,
+                    contact_id: Date.now()
+                };
+
+                // Save to localStorage
+                const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
+                contacts.push(mockResult.contact_info);
+                localStorage.setItem('contacts', JSON.stringify(contacts));
+
+                displayResults(mockResult);
+                loadUserStats();
+                isProcessing = false;
+            }, 2000);
+        }
+
+        // Search Functions
+        function searchContacts() {
+            const query = document.getElementById('queryInput').value.toLowerCase();
+            if (!query.trim()) return;
+
+            const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
+            const results = contacts.filter(contact => 
+                Object.values(contact).some(value => 
+                    value && value.toString().toLowerCase().includes(query)
+                )
+            );
+
+            displayQueryResults({ success: true, results });
+        }
+
+        function loadAllContacts() {
+            const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
+            displayQueryResults({ success: true, results: contacts }, 'All Your Contacts');
+        }
+
+        function deleteContact(index) {
+            if (!confirm('Are you sure you want to delete this contact?')) return;
+
+            const contacts = JSON.parse(localStorage.getItem('contacts') || '[]');
+            contacts.splice(index, 1);
+            localStorage.setItem('contacts', JSON.stringify(contacts));
+            
+            showSuccess('Contact deleted successfully');
+            loadAllContacts();
+            loadUserStats();
+        }
+
+        // Display Functions
+        function showLoading() {
+            document.getElementById('results').innerHTML = `
+                <div class="loading">
+                    🔄 Processing your visiting card... Please wait.
+                </div>
+            `;
+            document.getElementById('results').style.display = 'block';
+        }
+
+        function displayResults(result) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!result.success) {
+                resultsDiv.innerHTML = `<div class="error">❌ ${result.error}</div>`;
+                return;
+            }
+
+            const contact = result.contact_info;
+            const business = result.business_intelligence || {};
+
+            resultsDiv.innerHTML = `
+                <div class="success">✅ Contact information extracted and securely stored!</div>
+                
+                <div class="contact-card">
+                    <h3>📋 Contact Information</h3>
+                    ${Object.entries(contact).map(([key, value]) => `
+                        <div class="contact-field">
+                            <div class="field-label">${capitalizeFirst(key)}:</div>
+                            <div class="field-value">${value}</div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                ${business.category ? `
+                <div class="contact-card" style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);">
+                    <h3>🧠 Business Intelligence</h3>
+                    <div class="contact-field">
+                        <div class="field-label">Category:</div>
+                        <div class="field-value"><strong>${business.category}</strong></div>
+                    </div>
+                    ${business.subcategory ? `
+                    <div class="contact-field">
+                        <div class="field-label">Specialization:</div>
+                        <div class="field-value">${business.subcategory}</div>
+                    </div>
+                    ` : ''}
+                    ${business.services ? `
+                    <div class="contact-field">
+                        <div class="field-label">Services:</div>
+                        <div class="field-value">${business.services}</div>
+                    </div>
+                    ` : ''}
+                    ${business.keywords ? `
+                    <div class="contact-field">
+                        <div class="field-label">Keywords:</div>
+                        <div class="field-value">
+                            ${business.keywords.map(keyword => 
+                                `<span style="background: #667eea; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.9em; margin: 2px;">${keyword}</span>`
+                            ).join(' ')}
+                        </div>
+                    </div>
+                    ` : ''}
+                </div>
+                ` : ''}
+            `;
+        }
+
+        function displayQueryResults(result, title = 'Search Results') {
+            const queryResults = document.getElementById('queryResults');
+            
+            if (!result.success) {
+                queryResults.innerHTML = `<div class="error">❌ ${result.error}</div>`;
+                return;
+            }
+
+            const items = result.results || [];
+            
+            if (items.length === 0) {
+                queryResults.innerHTML = `<div class="error">🔍 No contacts found</div>`;
+                return;
+            }
+
+            queryResults.innerHTML = `
+                <h4>${title} (${items.length} found)</h4>
+                ${items.map((contact, index) => `
+                    <div class="contact-card">
+                        <button class="delete-btn" onclick="deleteContact(${index})">🗑️ Delete</button>
+                        <h4>${contact.name || 'Unknown Name'}</h4>
+                        ${contact.company ? `<p><strong>Company:</strong> ${contact.company}</p>` : ''}
+                        ${contact.phone ? `<p><strong>Phone:</strong> ${contact.phone}</p>` : ''}
+                        ${contact.email ? `<p><strong>Email:</strong> ${contact.email}</p>` : ''}
+                        ${contact.website ? `<p><strong>Website:</strong> ${contact.website}</p>` : ''}
+                    </div>
+                `).join('')}
+            `;
+        }
+
+        // Utility Functions
+        function capitalizeFirst(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1).replace('_', ' ');
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error';
+            errorDiv.innerHTML = `❌ ${message}`;
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.createElement('div');
+            successDiv.className = 'success';
+            successDiv.innerHTML = `✅ ${message}`;
+            document.body.appendChild(successDiv);
+            setTimeout(() => successDiv.remove(), 3000);
+        }
+
+        function showQueryError(message) {
+            document.getElementById('queryResults').innerHTML = `<div class="error">❌ ${message}</div>`;
+        }
+    </script>
+</body>
+</html>
